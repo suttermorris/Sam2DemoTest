@@ -17,6 +17,7 @@ from sam2.modeling.sam2_utils import get_1d_sine_pe, MLP, select_closest_cond_fr
 
 # a large negative value as a placeholder score for missing objects
 NO_OBJ_SCORE = -1024.0
+PREV_BASKETBALL_CENTROID=None
 
 
 class SAM2Base(torch.nn.Module):
@@ -400,6 +401,7 @@ class SAM2Base(torch.nn.Module):
         
         # If you have a frame index available (for example, passed in as `frame_idx`), you can print that.
         # Here we assume that each sample in the batch corresponds to one frame.
+        temp_last_centroid = None
         for i in range(binary_masks.shape[0]):
             # Calculate the coordinates from the low-resolution mask (assumed single channel).
             coords_low_res = torch.nonzero(binary_masks[i, 0])
@@ -410,6 +412,27 @@ class SAM2Base(torch.nn.Module):
             print(f"Frame {i}: low-res mask coordinates: {coords_low_res.tolist()}")
             print(f"Frame {i}: corresponding image mask coordinates: {coords_image.tolist()}")
 
+            # ----- Begin Candidate Filtering Block -----
+            # Proceed only if there are any mask pixels.
+            if coords_low_res.numel() > 0:
+                # Compute the centroid of the candidate mask.
+                centroid = coords_image.float().mean(dim=0)
+                if PREV_BASKETBALL_CENTROID == None:
+                    PREV_BASKETBALL_CENTROID = centroid
+                    temp_last_centroid = centroid
+                # Compute the Euclidean distance from the candidate centroid to the previous basketball centroid.
+                distance = torch.norm(centroid - PREV_BASKETBALL_CENTROID)
+                # If the candidate mask's centroid is outside the 70-pixel threshold, discard it.
+                if distance > 70.0:
+                    print(f"Frame {i}: Candidate mask eliminated, distance {distance.item():.2f} exceeds 70 pixels")
+                    low_res_multimasks[i] = NO_OBJ_SCORE
+                else:
+                    temp_last_centroid = centroid
+
+            # ----- End Candidate Filtering Block -----
+    
+        PREV_BASKETBALL_CENTROID = temp_last_centroid
+    
 
         # Extract object pointer from the SAM output token (with occlusion handling)
         obj_ptr = self.obj_ptr_proj(sam_output_token)
