@@ -423,9 +423,10 @@ class SAM2Base(torch.nn.Module):
                     temp_last_centroid = centroid
                 # Compute the Euclidean distance from the candidate centroid to the previous basketball centroid.
                 distance = torch.norm(centroid - PREV_BASKETBALL_CENTROID)
+                print(f"distance {distance}")
                 # If the candidate mask's centroid is outside the 70-pixel threshold, discard it.
-                if distance > 50.0:
-                    print(f"Frame {i}: Candidate mask eliminated, distance {distance.item():.2f} exceeds 50 pixels")
+                if distance > 70.0:
+                    print(f"Frame {i}: Candidate mask eliminated, distance {distance.item():.2f} exceeds 70 pixels")
                     low_res_multimasks[i] = NO_OBJ_SCORE
                 else:
                     temp_last_centroid = centroid
