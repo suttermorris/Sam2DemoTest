@@ -401,6 +401,7 @@ class SAM2Base(torch.nn.Module):
         
         # If you have a frame index available (for example, passed in as `frame_idx`), you can print that.
         # Here we assume that each sample in the batch corresponds to one frame.
+        global PREV_BASKETBALL_CENTROID
         temp_last_centroid = None
         for i in range(binary_masks.shape[0]):
             # Calculate the coordinates from the low-resolution mask (assumed single channel).
