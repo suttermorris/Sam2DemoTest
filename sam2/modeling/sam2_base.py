@@ -91,6 +91,8 @@ class SAM2Base(torch.nn.Module):
         use_mlp_for_obj_ptr_proj: bool = False,
         # add no obj embedding to spatial frames
         no_obj_embed_spatial: bool = False,
+        #adding frame count************
+        frame = 0
         # extra arguments used to construct the SAM mask decoder; if not None, it should be a dict of kwargs to be passed into `MaskDecoder` class.
         sam_mask_decoder_extra_args=None,
         compile_image_encoder: bool = False,
@@ -408,10 +410,11 @@ class SAM2Base(torch.nn.Module):
             coords_low_res = torch.nonzero(binary_masks[i, 0])
             # Multiply low-res coordinates to scale them to the full image dimensions.
             coords_image = coords_low_res * scale_factor
+            framecount = frame + 1
             # Print the frame and sample information along with the coordinates.
             # If you have an external frame index available, you could include it here.
-            print(f"Frame {i}: low-res mask coordinates: {coords_low_res.tolist()}")
-            print(f"Frame {i}: corresponding image mask coordinates: {coords_image.tolist()}")
+            print(f"Frame count: {framecount}: low-res mask coordinates: {coords_low_res.tolist()}")
+            print(f"Frame count: {framecount}: corresponding image mask coordinates: {coords_image.tolist()}")
 
             # ----- Begin Candidate Filtering Block -----
             # Proceed only if there are any mask pixels.
