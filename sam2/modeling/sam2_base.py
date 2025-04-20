@@ -92,7 +92,7 @@ class SAM2Base(torch.nn.Module):
         # add no obj embedding to spatial frames
         no_obj_embed_spatial: bool = False,
         #adding frame count************
-        frame = 0
+        frame = 0,
         # extra arguments used to construct the SAM mask decoder; if not None, it should be a dict of kwargs to be passed into `MaskDecoder` class.
         sam_mask_decoder_extra_args=None,
         compile_image_encoder: bool = False,
