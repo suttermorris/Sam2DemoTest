@@ -91,8 +91,6 @@ class SAM2Base(torch.nn.Module):
         use_mlp_for_obj_ptr_proj: bool = False,
         # add no obj embedding to spatial frames
         no_obj_embed_spatial: bool = False,
-        #adding frame count************
-        frame = 0,
         # extra arguments used to construct the SAM mask decoder; if not None, it should be a dict of kwargs to be passed into `MaskDecoder` class.
         sam_mask_decoder_extra_args=None,
         compile_image_encoder: bool = False,
@@ -402,6 +400,8 @@ class SAM2Base(torch.nn.Module):
         scale_factor = self.image_size / (self.sam_image_embedding_size * 4)  # e.g., 512 / 128 = 4
         
         # If you have a frame index available (for example, passed in as `frame_idx`), you can print that.
+         #adding frame count************
+        frame = 0
         # Here we assume that each sample in the batch corresponds to one frame.
         global PREV_BASKETBALL_CENTROID
         temp_last_centroid = None
