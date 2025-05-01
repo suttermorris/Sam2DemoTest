@@ -15,6 +15,9 @@ from sam2.modeling.sam.prompt_encoder import PromptEncoder
 from sam2.modeling.sam.transformer import TwoWayTransformer
 from sam2.modeling.sam2_utils import get_1d_sine_pe, MLP, select_closest_cond_frames
 
+from torchvision.ops import masks_to_boxes
+
+
 # a large negative value as a placeholder score for missing objects
 NO_OBJ_SCORE = -1024.0
 PREV_BASKETBALL_CENTROID=None
