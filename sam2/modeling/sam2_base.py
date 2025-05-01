@@ -923,7 +923,7 @@ class SAM2Base(torch.nn.Module):
         # 3) compute boxes: returns [B,4] as (x1,y1,x2,y2)
         boxes = masks_to_boxes(binary_masks)    # torch.Tensor of shape [B,4]
         print(f"Box dimensions: {boxes}")
-        print(f"Frame index: {frame_idx}"
+        print(f"Frame index: {frame_idx}")
 
 
         current_out["pred_masks"] = low_res_masks
