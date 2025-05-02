@@ -21,6 +21,7 @@ from torchvision.ops import masks_to_boxes
 # a large negative value as a placeholder score for missing objects
 NO_OBJ_SCORE = -1024.0
 PREV_BASKETBALL_CENTROID=None
+MASK_LIST = []
 
 
 class SAM2Base(torch.nn.Module):
