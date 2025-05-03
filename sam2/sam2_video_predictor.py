@@ -627,6 +627,9 @@ class SAM2VideoPredictor(SAM2Base):
             _, video_res_masks = self._get_orig_video_res_output(
                 inference_state, all_pred_masks
             )
+            with open('output.txt', 'a') as f:
+                f.write(frame_idx + "," + json.dumps(video_res_masks) + '\n')
+
             yield frame_idx, obj_ids, video_res_masks
 
     @torch.inference_mode()
