@@ -31,8 +31,8 @@ export const ABOUT_URL = 'https://ai.meta.com/sam2';
 export const EMAIL_ADDRESS = 'segment-anything@meta.com';
 export const BLOG_URL = 'http://ai.meta.com/blog/sam2';
 
-export const VIDEO_API_ENDPOINT = 'http://13.216.243.110:7263';
-export const INFERENCE_API_ENDPOINT = 'http://13.216.243.110:7263';
+export const VIDEO_API_ENDPOINT = 'http://54.174.137.133:7263';
+export const INFERENCE_API_ENDPOINT = 'http://54.174.137.133:7263';
 
 export const demoObjectLimit = 3;
 
