@@ -635,7 +635,8 @@ class SAM2VideoPredictor(SAM2Base):
             output_path = os.path.join(output_dir, "output.txt")
 
             with open(output_path, "a") as f:
-                f.write(f"{frame_idx},{json.dumps(video_res_masks)}\n")
+                # convert tensor -> nested lists, then dump
+                f.write(f"{frame_idx},{json.dumps(video_res_masks.tolist())}\n")
                 
             yield frame_idx, obj_ids, video_res_masks
 
