@@ -7,6 +7,7 @@
 import warnings
 from collections import OrderedDict
 
+import os
 import json
 
 import torch
@@ -629,9 +630,13 @@ class SAM2VideoPredictor(SAM2Base):
             _, video_res_masks = self._get_orig_video_res_output(
                 inference_state, all_pred_masks
             )
-            with open('output.txt', 'a') as f:
-                f.write(str(frame_idx) + "," + json.dumps(video_res_masks) + '\n')
+            output_dir = "Sam2DemoTest"
+            os.makedirs(output_dir, exist_ok=True)
+            output_path = os.path.join(output_dir, "output.txt")
 
+            with open(output_path, "a") as f:
+                f.write(f"{frame_idx},{json.dumps(video_res_masks)}\n")
+                
             yield frame_idx, obj_ids, video_res_masks
 
     @torch.inference_mode()
