@@ -909,7 +909,16 @@ class SAM2Base(torch.nn.Module):
             obj_ptr,
             object_score_logits,
         ) = sam_outputs
-
+# suppose high_res_masks is [B,1,H,W] of raw logits
+         # 1) binarize
+        binary_masks = (high_res_masks.sigmoid() > 0.5).to(torch.uint8)  # [B,1,H,W]
+         
+         # 2) remove the channel dim for masks_to_boxes
+        binary_masks = binary_masks.squeeze(1)  # [B,H,W]
+         
+         # 3) compute boxes: returns [B,4] as (x1,y1,x2,y2)
+        boxes = masks_to_boxes(binary_masks)    # torch.Tensor of shape [B,4]
+        print(f"{frame_idx} , {boxes}")
 
 
         current_out["pred_masks"] = low_res_masks
