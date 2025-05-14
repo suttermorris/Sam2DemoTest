@@ -917,8 +917,9 @@ class SAM2Base(torch.nn.Module):
         binary_masks = binary_masks.squeeze(1)  # [B,H,W]
          
          # 3) compute boxes: returns [B,4] as (x1,y1,x2,y2)
-        boxes = masks_to_boxes(binary_masks)    # torch.Tensor of shape [B,4]
-        print(f"{frame_idx} , {boxes}")
+        if binary_masks.numel() != 0 :
+            boxes = masks_to_boxes(binary_masks)    # torch.Tensor of shape [B,4]
+            print(f"{frame_idx} , {boxes}")
 
 
         current_out["pred_masks"] = low_res_masks
