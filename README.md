@@ -1,4 +1,4 @@
-# SUTTER SAM2
+# SUTTER SAM2: Now we're really cooking with gas!
 
 **[AI at Meta, FAIR](https://ai.meta.com/research/)**
 
