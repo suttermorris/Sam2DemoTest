@@ -413,7 +413,9 @@ class SAM2VideoPredictor(SAM2Base):
         binary_masks = binary_masks.squeeze(1)  # [B,H,W]
          
          # 3) compute boxes: returns [B,4] as (x1,y1,x2,y2)
-        if binary_masks.numel() != 0 :
+        if binary_masks.numel() == 0 or binary_masks.sum() == 0:
+            boxes = torch.zeros((0, 4), device=binary_masks.device)
+        else:
             boxes = masks_to_boxes(binary_masks)    # torch.Tensor of shape [B,4]
             print(f"video res mask to boxes: {boxes}")
         return any_res_masks, video_res_masks
