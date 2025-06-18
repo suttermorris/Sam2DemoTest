@@ -415,10 +415,7 @@ class SAM2Base(torch.nn.Module):
             # Multiply low-res coordinates to scale them to the full image dimensions.
             coords_image = coords_low_res * scale_factor
             framecount = frame + 1
-            # Print the frame and sample information along with the coordinates.
-            # If you have an external frame index available, you could include it here.
-            print(f"Frame count: {framecount}: low-res mask coordinates: {coords_low_res.tolist()}")
-            print(f"Frame count: {framecount}: corresponding image mask coordinates: {coords_image.tolist()}")
+            
 
             # ----- Begin Candidate Filtering Block -----
             # Proceed only if there are any mask pixels.
@@ -909,17 +906,8 @@ class SAM2Base(torch.nn.Module):
             obj_ptr,
             object_score_logits,
         ) = sam_outputs
-# suppose high_res_masks is [B,1,H,W] of raw logits
-         # 1) binarize
-        binary_masks = (high_res_masks.sigmoid() > 0.5).to(torch.uint8)  # [B,1,H,W]
-         
-         # 2) remove the channel dim for masks_to_boxes
-        binary_masks = binary_masks.squeeze(1)  # [B,H,W]
-         
-         # 3) compute boxes: returns [B,4] as (x1,y1,x2,y2)
-        if binary_masks.numel() != 0 :
-            boxes = masks_to_boxes(binary_masks)    # torch.Tensor of shape [B,4]
-            print(f"{frame_idx} , {boxes}")
+
+        print(f"frame index: {frame_idx}")
 
 
         current_out["pred_masks"] = low_res_masks
