@@ -295,6 +295,8 @@ class SAM2VideoPredictor(SAM2Base):
         _, video_res_masks = self._get_orig_video_res_output(
             inference_state, consolidated_out["pred_masks_video_res"]
         )
+        _sutter_print_box_for_mask(frame_idx, video_res_masks, "add_new_points_or_box")
+
         return frame_idx, obj_ids, video_res_masks
 
     def add_new_points(self, *args, **kwargs):
@@ -383,6 +385,7 @@ class SAM2VideoPredictor(SAM2Base):
         _, video_res_masks = self._get_orig_video_res_output(
             inference_state, consolidated_out["pred_masks_video_res"]
         )
+        _sutter_print_box_for_mask(frame_idx, video_res_masks, "add_new_mask")
         return frame_idx, obj_ids, video_res_masks
 
     def _get_orig_video_res_output(self, inference_state, any_res_masks):
@@ -405,9 +408,13 @@ class SAM2VideoPredictor(SAM2Base):
             )
         if self.non_overlap_masks:
             video_res_masks = self._apply_non_overlapping_constraints(video_res_masks)
+        
+        return any_res_masks, video_res_masks
+    
+    def _sutter_print_box_for_mask(self, frame_idx, masks, source):
         # suppose high_res_masks is [B,1,H,W] of raw logits
          # 1) binarize
-        binary_masks = (video_res_masks.sigmoid() > 0.5).to(torch.uint8)  # [B,1,H,W]
+        binary_masks = (masks.sigmoid() > 0.5).to(torch.uint8)  # [B,1,H,W]
          
          # 2) remove the channel dim for masks_to_boxes
         binary_masks = binary_masks.squeeze(1)  # [B,H,W]
@@ -417,8 +424,7 @@ class SAM2VideoPredictor(SAM2Base):
             boxes = torch.zeros((0, 4), device=binary_masks.device)
         else:
             boxes = masks_to_boxes(binary_masks)    # torch.Tensor of shape [B,4]
-            print(f"video res mask to boxes: {boxes}")
-        return any_res_masks, video_res_masks
+            print(f"{source}, {frame_idx}: {boxes}")
     
 
     def _consolidate_temp_output_across_obj(
@@ -646,6 +652,8 @@ class SAM2VideoPredictor(SAM2Base):
             _, video_res_masks = self._get_orig_video_res_output(
                 inference_state, all_pred_masks
             )
+            _sutter_print_box_for_mask(frame_idx, video_res_masks, "propagate_in_video")
+
             output_dir = "Sam2DemoTest"
             os.makedirs(output_dir, exist_ok=True)
             output_path = os.path.join(output_dir, "output.txt")
@@ -697,6 +705,8 @@ class SAM2VideoPredictor(SAM2Base):
         _, video_res_masks = self._get_orig_video_res_output(
             inference_state, consolidated_out["pred_masks_video_res"]
         )
+        _sutter_print_box_for_mask(frame_idx, video_res_masks, "clear_all_prompts_in_frame")
+
         return frame_idx, obj_ids, video_res_masks
 
     @torch.inference_mode()
@@ -976,6 +986,8 @@ class SAM2VideoPredictor(SAM2Base):
                 _, video_res_masks = self._get_orig_video_res_output(
                     inference_state, consolidated_out["pred_masks_video_res"]
                 )
+                _sutter_print_box_for_mask(frame_idx, video_res_masks, "remove_object")
+
                 updated_frames.append((frame_idx, video_res_masks))
 
         return inference_state["obj_ids"], updated_frames
