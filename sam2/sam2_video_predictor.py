@@ -18,6 +18,8 @@ from tqdm import tqdm
 from sam2.modeling.sam2_base import NO_OBJ_SCORE, SAM2Base
 from sam2.utils.misc import concat_points, fill_holes_in_mask_scores, load_video_frames
 
+from torchvision.ops import masks_to_boxes
+
 
 class SAM2VideoPredictor(SAM2Base):
     """The predictor class to handle user interactions and manage inference states."""
@@ -403,7 +405,19 @@ class SAM2VideoPredictor(SAM2Base):
             )
         if self.non_overlap_masks:
             video_res_masks = self._apply_non_overlapping_constraints(video_res_masks)
+        # suppose high_res_masks is [B,1,H,W] of raw logits
+         # 1) binarize
+        binary_masks = (video_res_masks.sigmoid() > 0.5).to(torch.uint8)  # [B,1,H,W]
+         
+         # 2) remove the channel dim for masks_to_boxes
+        binary_masks = binary_masks.squeeze(1)  # [B,H,W]
+         
+         # 3) compute boxes: returns [B,4] as (x1,y1,x2,y2)
+        if binary_masks.numel() != 0 :
+            boxes = masks_to_boxes(binary_masks)    # torch.Tensor of shape [B,4]
+            print(f"video res mask to boxes: {boxes}")
         return any_res_masks, video_res_masks
+    
 
     def _consolidate_temp_output_across_obj(
         self,
