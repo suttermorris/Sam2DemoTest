@@ -295,7 +295,7 @@ class SAM2VideoPredictor(SAM2Base):
         _, video_res_masks = self._get_orig_video_res_output(
             inference_state, consolidated_out["pred_masks_video_res"]
         )
-        _sutter_print_box_for_mask(frame_idx, video_res_masks, "add_new_points_or_box")
+        self._sutter_print_box_for_mask(frame_idx, video_res_masks, "add_new_points_or_box")
 
         return frame_idx, obj_ids, video_res_masks
 
@@ -385,7 +385,7 @@ class SAM2VideoPredictor(SAM2Base):
         _, video_res_masks = self._get_orig_video_res_output(
             inference_state, consolidated_out["pred_masks_video_res"]
         )
-        _sutter_print_box_for_mask(frame_idx, video_res_masks, "add_new_mask")
+        self._sutter_print_box_for_mask(frame_idx, video_res_masks, "add_new_mask")
         return frame_idx, obj_ids, video_res_masks
 
     def _get_orig_video_res_output(self, inference_state, any_res_masks):
@@ -652,7 +652,7 @@ class SAM2VideoPredictor(SAM2Base):
             _, video_res_masks = self._get_orig_video_res_output(
                 inference_state, all_pred_masks
             )
-            _sutter_print_box_for_mask(frame_idx, video_res_masks, "propagate_in_video")
+            self._sutter_print_box_for_mask(frame_idx, video_res_masks, "propagate_in_video")
 
             output_dir = "Sam2DemoTest"
             os.makedirs(output_dir, exist_ok=True)
@@ -705,7 +705,7 @@ class SAM2VideoPredictor(SAM2Base):
         _, video_res_masks = self._get_orig_video_res_output(
             inference_state, consolidated_out["pred_masks_video_res"]
         )
-        _sutter_print_box_for_mask(frame_idx, video_res_masks, "clear_all_prompts_in_frame")
+        self._sutter_print_box_for_mask(frame_idx, video_res_masks, "clear_all_prompts_in_frame")
 
         return frame_idx, obj_ids, video_res_masks
 
@@ -986,7 +986,7 @@ class SAM2VideoPredictor(SAM2Base):
                 _, video_res_masks = self._get_orig_video_res_output(
                     inference_state, consolidated_out["pred_masks_video_res"]
                 )
-                _sutter_print_box_for_mask(frame_idx, video_res_masks, "remove_object")
+                self._sutter_print_box_for_mask(frame_idx, video_res_masks, "remove_object")
 
                 updated_frames.append((frame_idx, video_res_masks))
 
