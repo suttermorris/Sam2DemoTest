@@ -414,6 +414,7 @@ class SAM2VideoPredictor(SAM2Base):
         return any_res_masks, video_res_masks
     
     def _sutter_print_box_for_mask(self, frame_idx, masks, source):
+        return
         # suppose high_res_masks is [B,1,H,W] of raw logits
          # 1) binarize
         binary_masks = (masks.sigmoid() > 0.5).to(torch.uint8)  # [B,1,H,W]
@@ -663,7 +664,11 @@ class SAM2VideoPredictor(SAM2Base):
             with open(output_path, "a") as f:
                 # convert tensor -> nested lists, then dump
                 f.write(f"{frame_idx},{json.dumps(video_res_masks.tolist())}\n")
-                
+            if frame_idx == 60:
+                bucket_name = "visionai.fullcourt.ai"
+                s3_key = "sam2/output/masks.json"  # or any path you want in the bucket
+
+                self.upload_to_s3(output_path, bucket_name, s3_key)    
             yield frame_idx, obj_ids, video_res_masks
 
         # After the generator is done:
