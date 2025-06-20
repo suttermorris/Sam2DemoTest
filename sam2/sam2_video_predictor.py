@@ -20,6 +20,7 @@ from sam2.utils.misc import concat_points, fill_holes_in_mask_scores, load_video
 
 from torchvision.ops import masks_to_boxes
 
+import boto3
 
 class SAM2VideoPredictor(SAM2Base):
     """The predictor class to handle user interactions and manage inference states."""
@@ -663,6 +664,21 @@ class SAM2VideoPredictor(SAM2Base):
                 f.write(f"{frame_idx},{json.dumps(video_res_masks.tolist())}\n")
                 
             yield frame_idx, obj_ids, video_res_masks
+
+        # After the generator is done:
+        bucket_name = "visionai.fullcourt.ai"
+        s3_key = "sam2/output/masks.json"  # or any path you want in the bucket
+
+        upload_to_s3(output_path, bucket_name, s3_key)
+
+def upload_to_s3(local_path, bucket, s3_key):
+    s3 = boto3.client('s3')
+    s3.upload_file(local_path, bucket, s3_key)
+    print(f"Uploaded {local_path} to s3://{bucket}/{s3_key}")
+
+
+
+
 
     @torch.inference_mode()
     def clear_all_prompts_in_frame(
