@@ -677,7 +677,7 @@ class SAM2VideoPredictor(SAM2Base):
 
         self.upload_to_s3(output_path, bucket_name, s3_key)
 
-    def upload_to_s3(local_path, bucket, s3_key):
+    def upload_to_s3(self, local_path, bucket, s3_key):
         s3 = boto3.client('s3')
         try:
             s3.upload_file(local_path, bucket, s3_key)
