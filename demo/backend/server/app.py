@@ -84,6 +84,7 @@ def propagate_in_video() -> Response:
 
     boundary = "frame"
     frame = gen_track_with_mask_stream(boundary, **args)
+    print("***frame:", frame)
     return Response(frame, mimetype="multipart/x-savi-stream; boundary=" + boundary)
 
 
