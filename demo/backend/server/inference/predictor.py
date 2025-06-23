@@ -325,7 +325,17 @@ class InferenceAPI:
 
                         # --- Write frame_idx and rle_mask_list to file ---
                         with open(output_path, "a") as f:
-                            f.write(f"{frame_idx},{json.dumps(rle_mask_list)}\n")
+                            masks_rle = [
+                                {
+                                    "objectId": rle.object_id,
+                                    "counts": rle.mask.counts,
+                                    "size": rle.mask.size,
+                                }
+                                for rle in rle_mask_list
+                            ]
+
+                            f.write(f"{frame_idx},{json.dumps(masks_rle)}\n")
+                            
                         # --- Upload to S3 at frame_idx == 60 ---
                         if frame_idx == 60:
                             bucket_name = "visionai.fullcourt.ai"
@@ -384,6 +394,17 @@ class InferenceAPI:
         session["canceled"] = True
         return CancelPorpagateResponse(success=True)
 
+    def __get_rle_mask_list_not_zipped(
+        self, object_ids: List[int], masks: np.ndarray
+    ) -> List[PropagateDataValue]:
+        """
+        Return a list of data values, i.e. list of object/mask combos.
+        """
+        return [
+            self.__get_mask_for_object(object_id=object_id, mask=mask)
+            for object_id, mask in zip(object_ids, masks)
+        ]
+    
     def __get_rle_mask_list(
         self, object_ids: List[int], masks: np.ndarray
     ) -> List[PropagateDataValue]:
