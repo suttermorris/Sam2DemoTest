@@ -667,7 +667,6 @@ class SAM2VideoPredictor(SAM2Base):
             _, video_res_masks = self._get_orig_video_res_output(
                 inference_state, all_pred_masks
             )
-            self._sutter_print_box_for_mask(frame_idx, video_res_masks, "propagate_in_video")
 
             output_dir = "Sam2DemoTest"
             os.makedirs(output_dir, exist_ok=True)
@@ -676,16 +675,12 @@ class SAM2VideoPredictor(SAM2Base):
             with open(output_path, "a") as f:
                 # convert tensor -> nested lists, then dump
                 f.write(f"{frame_idx},{json.dumps(video_res_masks.tolist())}\n")
-                # --- New code: Write RLE mask list ---
-                masks = video_res_masks
-                if masks.dim() == 4:
-                    masks = masks.squeeze(1)  # [B, H, W]
-                rle_mask_list = mask_to_rle_pytorch(masks.cpu())
-                f.write(f"RLE_{frame_idx},{json.dumps(rle_mask_list)}\n")
+        
             if frame_idx == 60:
                 bucket_name = "visionai.fullcourt.ai"
                 s3_key = "sam2/output/masks.json"  # or any path you want in the bucket
-                self.upload_to_s3(output_path, bucket_name, s3_key)    
+                self.upload_to_s3(output_path, bucket_name, s3_key)   
+
             yield frame_idx, obj_ids, video_res_masks
 
         # After the generator is done:
