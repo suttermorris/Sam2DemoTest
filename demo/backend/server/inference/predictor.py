@@ -286,19 +286,20 @@ class InferenceAPI:
         # Note that as this method is a generator, we also need to use autocast_context
         # in caller to this method to ensure that it's called under the correct context
         # (we've added `autocast_context` to `gen_track_with_mask_stream` in app.py).
-        output_dir = "Sam2DemoTest"
-        os.makedirs(output_dir, exist_ok=True)
-        output_path = os.path.join(output_dir, "output_rle.txt")
         with self.autocast_context(), self.inference_lock:
             logger.info(
                 f"propagate in video in session {session_id}: "
                 f"{propagation_direction=}, {start_frame_idx=}, {max_frame_num_to_track=}"
             )
 
+            # Set up output path for RLE mask writing
+            output_dir = "Sam2DemoTest"
+            os.makedirs(output_dir, exist_ok=True)
+            output_path = os.path.join(output_dir, "output_rle.txt")
+
             try:
                 session = self.__get_session(session_id)
                 session["canceled"] = False
-
                 inference_state = session["state"]
                 if propagation_direction not in ["both", "forward", "backward"]:
                     raise ValueError(
