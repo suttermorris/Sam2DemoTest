@@ -7,6 +7,7 @@ import contextlib
 import logging
 import os
 import uuid
+import json
 from pathlib import Path
 from threading import Lock
 from typing import Any, Dict, Generator, List
@@ -35,6 +36,9 @@ from inference.data_types import (
 )
 from pycocotools.mask import decode as decode_masks, encode as encode_masks
 from sam2.build_sam import build_sam2_video_predictor
+from sam2.utils.amg import mask_to_rle_pytorch
+import boto3
+from botocore.exceptions import ClientError
 
 
 logger = logging.getLogger(__name__)
@@ -282,6 +286,9 @@ class InferenceAPI:
         # Note that as this method is a generator, we also need to use autocast_context
         # in caller to this method to ensure that it's called under the correct context
         # (we've added `autocast_context` to `gen_track_with_mask_stream` in app.py).
+        output_dir = "Sam2DemoTest"
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, "output_rle.txt")
         with self.autocast_context(), self.inference_lock:
             logger.info(
                 f"propagate in video in session {session_id}: "
@@ -318,6 +325,23 @@ class InferenceAPI:
                             object_ids=obj_ids, masks=masks_binary
                         )
 
+                        # --- Write frame_idx and rle_mask_list to file ---
+                        with open(output_path, "a") as f:
+                            f.write(f"{frame_idx},{json.dumps(rle_mask_list)}\n")
+                        # --- Upload to S3 at frame_idx == 60 ---
+                        if frame_idx == 60:
+                            bucket_name = "visionai.fullcourt.ai"
+                            s3_key = "sam2/output/rlemasks.json"
+                            s3 = boto3.client('s3')
+                            try:
+                                s3.upload_file(output_path, bucket_name, s3_key)
+                                print(f"Uploaded {output_path} to s3://{bucket_name}/{s3_key}")
+                            except ClientError as e:
+                                print(f"Failed to upload {output_path} to s3://{bucket_name}/{s3_key}")
+                                print(f"Error: {e}")
+                            except Exception as e:
+                                print(f"An unexpected error occurred while uploading {output_path} to s3://{bucket_name}/{s3_key}")
+                                print(f"Error: {e}")
                         yield PropagateDataResponse(
                             frame_index=frame_idx,
                             results=rle_mask_list,

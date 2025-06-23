@@ -23,6 +23,8 @@ from torchvision.ops import masks_to_boxes
 import boto3
 from botocore.exceptions import ClientError
 
+from sam2.utils.amg import mask_to_rle_pytorch
+
 class SAM2VideoPredictor(SAM2Base):
     """The predictor class to handle user interactions and manage inference states."""
 
@@ -298,6 +300,16 @@ class SAM2VideoPredictor(SAM2Base):
             inference_state, consolidated_out["pred_masks_video_res"]
         )
         self._sutter_print_box_for_mask(frame_idx, video_res_masks, "add_new_points_or_box")
+
+        with open(output_path, "a") as f:
+            # convert tensor -> nested lists, then dump
+            f.write(f"{frame_idx},{json.dumps(video_res_masks.tolist())}\n")
+            # --- New code: Write RLE mask list ---
+            masks = video_res_masks
+            if masks.dim() == 4:
+                masks = masks.squeeze(1)  # [B, H, W]
+            rle_mask_list = mask_to_rle_pytorch(masks.cpu())
+            f.write(f"RLE_{frame_idx},{json.dumps(rle_mask_list)}\n")
 
         return frame_idx, obj_ids, video_res_masks
 
@@ -664,10 +676,15 @@ class SAM2VideoPredictor(SAM2Base):
             with open(output_path, "a") as f:
                 # convert tensor -> nested lists, then dump
                 f.write(f"{frame_idx},{json.dumps(video_res_masks.tolist())}\n")
+                # --- New code: Write RLE mask list ---
+                masks = video_res_masks
+                if masks.dim() == 4:
+                    masks = masks.squeeze(1)  # [B, H, W]
+                rle_mask_list = mask_to_rle_pytorch(masks.cpu())
+                f.write(f"RLE_{frame_idx},{json.dumps(rle_mask_list)}\n")
             if frame_idx == 60:
                 bucket_name = "visionai.fullcourt.ai"
                 s3_key = "sam2/output/masks.json"  # or any path you want in the bucket
-
                 self.upload_to_s3(output_path, bucket_name, s3_key)    
             yield frame_idx, obj_ids, video_res_masks
 
