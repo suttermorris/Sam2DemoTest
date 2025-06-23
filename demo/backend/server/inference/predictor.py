@@ -13,6 +13,7 @@ from typing import Any, Dict, Generator, List
 
 import numpy as np
 import torch
+import json
 from app_conf import APP_ROOT, MODEL_SIZE
 from inference.data_types import (
     AddMaskRequest,
