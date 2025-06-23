@@ -23,8 +23,6 @@ from torchvision.ops import masks_to_boxes
 import boto3
 from botocore.exceptions import ClientError
 
-from sam2.utils.amg import mask_to_rle_pytorch
-
 class SAM2VideoPredictor(SAM2Base):
     """The predictor class to handle user interactions and manage inference states."""
 
@@ -647,12 +645,11 @@ class SAM2VideoPredictor(SAM2Base):
             with open(output_path, "a") as f:
                 # convert tensor -> nested lists, then dump
                 f.write(f"{frame_idx},{json.dumps(video_res_masks.tolist())}\n")
-        
             if frame_idx == 60:
                 bucket_name = "visionai.fullcourt.ai"
                 s3_key = "sam2/output/masks.json"  # or any path you want in the bucket
-                self.upload_to_s3(output_path, bucket_name, s3_key)   
 
+                self.upload_to_s3(output_path, bucket_name, s3_key)    
             yield frame_idx, obj_ids, video_res_masks
 
         # After the generator is done:

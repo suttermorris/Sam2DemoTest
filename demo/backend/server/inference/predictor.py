@@ -7,7 +7,6 @@ import contextlib
 import logging
 import os
 import uuid
-import json
 from pathlib import Path
 from threading import Lock
 from typing import Any, Dict, Generator, List
@@ -36,9 +35,6 @@ from inference.data_types import (
 )
 from pycocotools.mask import decode as decode_masks, encode as encode_masks
 from sam2.build_sam import build_sam2_video_predictor
-from sam2.utils.amg import mask_to_rle_pytorch
-import boto3
-from botocore.exceptions import ClientError
 
 
 logger = logging.getLogger(__name__)
@@ -292,14 +288,10 @@ class InferenceAPI:
                 f"{propagation_direction=}, {start_frame_idx=}, {max_frame_num_to_track=}"
             )
 
-            # Set up output path for RLE mask writing
-            output_dir = "Sam2DemoTest"
-            os.makedirs(output_dir, exist_ok=True)
-            output_path = os.path.join(output_dir, "output_rle.txt")
-
             try:
                 session = self.__get_session(session_id)
                 session["canceled"] = False
+
                 inference_state = session["state"]
                 if propagation_direction not in ["both", "forward", "backward"]:
                     raise ValueError(
@@ -326,6 +318,10 @@ class InferenceAPI:
                             object_ids=obj_ids, masks=masks_binary
                         )
 
+                        output_dir = "Sam2DemoTest"
+                        os.makedirs(output_dir, exist_ok=True)
+                        output_path = os.path.join(output_dir, "outputrle.txt")
+
                         # --- Write frame_idx and rle_mask_list to file ---
                         with open(output_path, "a") as f:
                             f.write(f"{frame_idx},{json.dumps(rle_mask_list)}\n")
@@ -343,6 +339,7 @@ class InferenceAPI:
                             except Exception as e:
                                 print(f"An unexpected error occurred while uploading {output_path} to s3://{bucket_name}/{s3_key}")
                                 print(f"Error: {e}")
+
                         yield PropagateDataResponse(
                             frame_index=frame_idx,
                             results=rle_mask_list,
