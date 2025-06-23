@@ -299,17 +299,6 @@ class SAM2VideoPredictor(SAM2Base):
         _, video_res_masks = self._get_orig_video_res_output(
             inference_state, consolidated_out["pred_masks_video_res"]
         )
-        self._sutter_print_box_for_mask(frame_idx, video_res_masks, "add_new_points_or_box")
-
-        with open(output_path, "a") as f:
-            # convert tensor -> nested lists, then dump
-            f.write(f"{frame_idx},{json.dumps(video_res_masks.tolist())}\n")
-            # --- New code: Write RLE mask list ---
-            masks = video_res_masks
-            if masks.dim() == 4:
-                masks = masks.squeeze(1)  # [B, H, W]
-            rle_mask_list = mask_to_rle_pytorch(masks.cpu())
-            f.write(f"RLE_{frame_idx},{json.dumps(rle_mask_list)}\n")
 
         return frame_idx, obj_ids, video_res_masks
 
@@ -399,7 +388,6 @@ class SAM2VideoPredictor(SAM2Base):
         _, video_res_masks = self._get_orig_video_res_output(
             inference_state, consolidated_out["pred_masks_video_res"]
         )
-        self._sutter_print_box_for_mask(frame_idx, video_res_masks, "add_new_mask")
         return frame_idx, obj_ids, video_res_masks
 
     def _get_orig_video_res_output(self, inference_state, any_res_masks):
@@ -424,22 +412,6 @@ class SAM2VideoPredictor(SAM2Base):
             video_res_masks = self._apply_non_overlapping_constraints(video_res_masks)
         
         return any_res_masks, video_res_masks
-    
-    def _sutter_print_box_for_mask(self, frame_idx, masks, source):
-        return
-        # suppose high_res_masks is [B,1,H,W] of raw logits
-         # 1) binarize
-        binary_masks = (masks.sigmoid() > 0.5).to(torch.uint8)  # [B,1,H,W]
-         
-         # 2) remove the channel dim for masks_to_boxes
-        binary_masks = binary_masks.squeeze(1)  # [B,H,W]
-         
-         # 3) compute boxes: returns [B,4] as (x1,y1,x2,y2)
-        if binary_masks.numel() == 0 or binary_masks.sum() == 0:
-            boxes = torch.zeros((0, 4), device=binary_masks.device)
-        else:
-            boxes = masks_to_boxes(binary_masks)    # torch.Tensor of shape [B,4]
-            print(f"{source}, {frame_idx}: {boxes}")
     
 
     def _consolidate_temp_output_across_obj(
@@ -746,7 +718,6 @@ class SAM2VideoPredictor(SAM2Base):
         _, video_res_masks = self._get_orig_video_res_output(
             inference_state, consolidated_out["pred_masks_video_res"]
         )
-        self._sutter_print_box_for_mask(frame_idx, video_res_masks, "clear_all_prompts_in_frame")
 
         return frame_idx, obj_ids, video_res_masks
 
@@ -1027,7 +998,6 @@ class SAM2VideoPredictor(SAM2Base):
                 _, video_res_masks = self._get_orig_video_res_output(
                     inference_state, consolidated_out["pred_masks_video_res"]
                 )
-                self._sutter_print_box_for_mask(frame_idx, video_res_masks, "remove_object")
 
                 updated_frames.append((frame_idx, video_res_masks))
 
