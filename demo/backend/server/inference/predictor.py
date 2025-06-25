@@ -324,6 +324,12 @@ class InferenceAPI:
                         os.makedirs(output_dir, exist_ok=True)
                         output_path = os.path.join(output_dir, "outputrle.txt")
 
+                        # --- Delete existing file before first write (since we append) ---
+                        if frame_idx == start_frame_idx:
+                            if os.path.exists(output_path):
+                                os.remove(output_path)
+                                print(f"Deleted existing file: {output_path}")
+
                         # --- Write frame_idx and rle_mask_list to file ---
                         with open(output_path, "a") as f:
                             masks_rle = [
@@ -336,21 +342,6 @@ class InferenceAPI:
                             ]
 
                             f.write(f"{frame_idx},{json.dumps(masks_rle)}\n")
-                            
-                        # --- Upload to S3 at frame_idx == 60 ---
-                        if frame_idx == 60:
-                            bucket_name = "visionai.fullcourt.ai"
-                            s3_key = "sam2/output/rlemasks.json"
-                            s3 = boto3.client('s3')
-                            try:
-                                s3.upload_file(output_path, bucket_name, s3_key)
-                                print(f"Uploaded {output_path} to s3://{bucket_name}/{s3_key}")
-                            except ClientError as e:
-                                print(f"Failed to upload {output_path} to s3://{bucket_name}/{s3_key}")
-                                print(f"Error: {e}")
-                            except Exception as e:
-                                print(f"An unexpected error occurred while uploading {output_path} to s3://{bucket_name}/{s3_key}")
-                                print(f"Error: {e}")
 
                         yield PropagateDataResponse(
                             frame_index=frame_idx,
@@ -381,6 +372,23 @@ class InferenceAPI:
                             frame_index=frame_idx,
                             results=rle_mask_list,
                         )
+                        
+                # --- Upload to S3 after all frames are processed ---
+                if os.path.exists(output_path):
+                    bucket_name = "visionai.fullcourt.ai"
+                    s3_key = "sam2/output/rlemasks.json"
+                    s3 = boto3.client('s3')
+                    try:
+                        s3.upload_file(output_path, bucket_name, s3_key)
+                        print(f"Uploaded {output_path} to s3://{bucket_name}/{s3_key}")
+                    except ClientError as e:
+                        print(f"Failed to upload {output_path} to s3://{bucket_name}/{s3_key}")
+                        print(f"Error: {e}")
+                    except Exception as e:
+                        print(f"An unexpected error occurred while uploading {output_path} to s3://{bucket_name}/{s3_key}")
+                        print(f"Error: {e}")
+                else:
+                    print(f"Output file {output_path} does not exist, skipping S3 upload")
             finally:
                 # Log upon completion (so that e.g. we can see if two propagations happen in parallel).
                 # Using `finally` here to log even when the tracking is aborted with GeneratorExit.
@@ -470,3 +478,31 @@ class InferenceAPI:
         else:
             logger.info(f"removed session {session_id}; {self.__get_session_stats()}")
             return True
+
+    def __decode_rle_mask_list(
+        self, rle_mask_list: List[PropagateDataValue]
+    ) -> tuple[List[int], np.ndarray]:
+        """
+        Decode a list of RLE mask data values back into object_ids and masks_binary.
+        This is the inverse of __get_rle_mask_list.
+        """
+        object_ids = []
+        masks_list = []
+        
+        for rle_data in rle_mask_list:
+            object_ids.append(rle_data.object_id)
+            
+            # Reconstruct the RLE dict
+            mask_rle = {
+                "counts": rle_data.mask.counts.encode(),  # Convert string back to bytes
+                "size": rle_data.mask.size
+            }
+            
+            # Decode the RLE back to binary mask
+            mask = decode_masks(mask_rle)
+            masks_list.append(mask)
+        
+        # Stack all masks into a single array
+        masks_binary = np.stack(masks_list, axis=0)  # Shape: [num_objects, H, W]
+        
+        return object_ids, masks_binary
