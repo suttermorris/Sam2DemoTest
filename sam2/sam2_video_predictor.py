@@ -637,41 +637,8 @@ class SAM2VideoPredictor(SAM2Base):
             _, video_res_masks = self._get_orig_video_res_output(
                 inference_state, all_pred_masks
             )
-
-            output_dir = "Sam2DemoTest"
-            os.makedirs(output_dir, exist_ok=True)
-            output_path = os.path.join(output_dir, "output.txt")
-
-            with open(output_path, "a") as f:
-                # convert tensor -> nested lists, then dump
-                f.write(f"{frame_idx},{json.dumps(video_res_masks.tolist())}\n")
-            if frame_idx == 60:
-                bucket_name = "visionai.fullcourt.ai"
-                s3_key = "sam2/output/masks.json"  # or any path you want in the bucket
-
-                self.upload_to_s3(output_path, bucket_name, s3_key)    
+    
             yield frame_idx, obj_ids, video_res_masks
-
-        # After the generator is done:
-        bucket_name = "visionai.fullcourt.ai"
-        s3_key = "sam2/output/masks.json"  # or any path you want in the bucket
-
-        self.upload_to_s3(output_path, bucket_name, s3_key)
-
-    def upload_to_s3(self, local_path, bucket, s3_key):
-        s3 = boto3.client('s3')
-        try:
-            s3.upload_file(local_path, bucket, s3_key)
-            print(f"Uploaded {local_path} to s3://{bucket}/{s3_key}")
-        except ClientError as e:
-            print(f"Failed to upload {local_path} to s3://{bucket}/{s3_key}")
-            print(f"Error: {e}")
-        except Exception as e:
-            print(f"An unexpected error occurred while uploading {local_path} to s3://{bucket}/{s3_key}")
-            print(f"Error: {e}")
-
-
-
 
 
     @torch.inference_mode()

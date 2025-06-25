@@ -299,9 +299,17 @@ class InferenceAPI:
                     raise ValueError(
                         f"invalid propagation direction: {propagation_direction}"
                     )
-
+                
+                output_dir = "Sam2DemoTest"
+                os.makedirs(output_dir, exist_ok=True)
+                output_path = os.path.join(output_dir, "outputrle.txt")
+                if os.path.exists(output_path):
+                    os.remove(output_path)
+                    print(f"Deleted existing file: {output_path}")
+            
                 # First doing the forward propagation
                 if propagation_direction in ["both", "forward"]:
+                            
                     for outputs in self.predictor.propagate_in_video(
                         inference_state=inference_state,
                         start_frame_idx=start_frame_idx,
@@ -320,15 +328,7 @@ class InferenceAPI:
                             object_ids=obj_ids, masks=masks_binary
                         )
 
-                        output_dir = "Sam2DemoTest"
-                        os.makedirs(output_dir, exist_ok=True)
-                        output_path = os.path.join(output_dir, "outputrle.txt")
-
-                        # --- Delete existing file before first write (since we append) ---
-                        if frame_idx == start_frame_idx:
-                            if os.path.exists(output_path):
-                                os.remove(output_path)
-                                print(f"Deleted existing file: {output_path}")
+                        
 
                         # --- Write frame_idx and rle_mask_list to file ---
                         with open(output_path, "a") as f:
