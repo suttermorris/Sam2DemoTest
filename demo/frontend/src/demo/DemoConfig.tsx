@@ -32,8 +32,8 @@ export const EMAIL_ADDRESS = 'segment-anything@meta.com';
 export const BLOG_URL = 'http://ai.meta.com/blog/sam2';
 
 // RESTART: update instance ip every time you restart in AWS
-export const VIDEO_API_ENDPOINT = 'http://13.217.43.29:7263';
-export const INFERENCE_API_ENDPOINT = 'http://13.217.43.29:7263';
+export const VIDEO_API_ENDPOINT = 'http://52.90.239.253:7263';
+export const INFERENCE_API_ENDPOINT = 'http://52.90.239.253:7263';
 
 export const demoObjectLimit = 3;
 

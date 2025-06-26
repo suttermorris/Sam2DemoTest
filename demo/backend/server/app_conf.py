@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 APP_ROOT = os.getenv("APP_ROOT", "/opt/sam2")
 
 # RESTART: update instance ip every time you restart in AWS
-API_URL = os.getenv("API_URL", "http://13.217.43.29:7263")
+API_URL = os.getenv("API_URL", "http://52.90.239.253:7263")
 
 MODEL_SIZE = os.getenv("MODEL_SIZE", "base_plus")
 
